@@ -15,7 +15,7 @@ import matplotlib.animation as animation
 
 
 
-
+qweqwe
 
 root = tkinter.Tk()
 root.resizable(width=1,height=1)
