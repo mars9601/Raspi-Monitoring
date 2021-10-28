@@ -47,28 +47,23 @@ def connect():
     print(e3.get())
     print(e4.get())
     global rpidb
-    rpidb = 0
-    try:
-        rpidb = mysql.connector.connect(
-            host= e1.get(),
-            user= e3.get(),
-            password= e4.get(),
-            database= e2.get())
-        mycursor = rpidb.cursor()
-    except mysql.connector.Error as err:
-        if rpidb != 0:
-            button1['state'] = tkinter.DISABLED
-            button3['state'] = tkinter.NORMAL
-            print("Verbunden!")
-        else:
-            
-            button1.configure (bg= "red")
-            button1.after(1000)
-            button3['state'] = tkinter.DISABLED
-            button1.configure (bg="SystemButtonFace")
-            print("Keine Verbindung")
-
-
+    rpidb = mysql.connector.connect(
+        host= e1.get(),
+        user= e3.get(),
+        password= e4.get(),
+        database= e2.get())
+    cursor = rpidb.cursor()
+    cursor.execute("SELECT VERSION()")
+    results = cursor.fetchone()
+    if results:
+        button1.configure (bg="SystemButtonFace")
+        button1['state'] = tkinter.DISABLED
+        button3['state'] = tkinter.NORMAL
+        print("Verbunden!")
+    else:
+        button1.configure (bg= "red")
+        button3['state'] = tkinter.DISABLED
+        
 def trennen():
     rpidb.close()
 
@@ -90,13 +85,14 @@ button3.grid(row=1, column=4, padx=10, pady=10)
 
 button3['state'] = tkinter.DISABLED
 
+
+
+
+
+
 time = 0
 ram = 0
 cpu = 0
-
-
-
-
 
 fig1 = plt.figure()
 gs1 = fig1.add_gridspec(1, 2, wspace=0)

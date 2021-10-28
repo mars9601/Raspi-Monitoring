@@ -52,9 +52,9 @@ while True:
     # Datenbankverbindung aufbauen
     if( antwort == "1" or antwort == "2" or antwort == "3"):
         rpidb = mysql.connector.connect(
-            host="localhost",
-            user="root",
-            password="",
+            host="marsserver.dynamic-dns.info",
+            user="mars",
+            password="test",
             database="raspi")
         
         mycursor = rpidb.cursor()
