@@ -63,8 +63,35 @@ def connect():
     else:
         button1.configure (bg= "red")
         button3['state'] = tkinter.DISABLED
-        
+    
+    running = True
+    table = input("Gerät angeben: ")
+    while (running == True):
+        cpu = CPU(cursor, table)
+        print(cpu)
+        sleep(1)
+        if running == False:
+            break
+
+    
+
+
+
+
+
+def CPU(cursor, table):
+    sql = "SELECT (CPU) FROM "+table+" ORDER BY ID DESC LIMIT 1)"
+    cursor.execute(sql)
+    return cursor.fetchone()        
+
+
+
+
+
+
+
 def trennen():
+    running = False
     rpidb.close()
 
 
