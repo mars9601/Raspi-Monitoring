@@ -113,11 +113,11 @@ def dblog24(dbdev):
     ax1.set_ylim((0,100))
     ax1.set_title("MIN CPU/RAM")
     try:
-        ax1.plot("MIN CPU",min_cpu)
-        ax1.plot("MIN RAM",min_ram)
+        ax1.bar("MIN CPU",min_cpu)
+        ax1.bar("MIN RAM",min_ram)
     except:
-        ax1.plot("MIN CPU",0)
-        ax1.plot("MIN RAM",0)
+        ax1.bar("MIN CPU",0)
+        ax1.bar("MIN RAM",0)
         # Wenn error bereits geworfen --> pass
         if errorcheck1 > 0:
             pass
