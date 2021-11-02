@@ -1,24 +1,27 @@
-from datetime import datetime
 import tkinter  
 from tkinter import *
 from tkinter import ttk
-from typing import Deque
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
-from matplotlib.figure import Figure
 from tkinter.messagebox import askyesno
 from tkinter import messagebox
 import mysql.connector
-from mysql.connector.errors import Error
-import time
 import csv
-
+import pandas as pd
+from numpy import empty
+import matplotlib.patches as mpatches
 
 
 db= None
-
 errorcheck1 = 0
 errorcheck2 = 0
+import csv
+erwin = 0
+with open('plot.csv', 'w', newline='') as outcsv:
+    writer = csv.writer(outcsv)
+    writer.writerow(["ID", "CPU", "RAM"])
+
+
 
 
 def connect(dbhost, dbname, dbuser, dppass, dbdev):
@@ -155,12 +158,11 @@ def dblog24(dbdev):
         ax3.bar("AVG RAM",0)
     canvas3 = FigureCanvasTkAgg(fig3,tab2)
     canvas3.get_tk_widget().grid(row=0, column=2)
-
-
 # Live-Statistik
 def dbloglive(dbdev):                                                                                   
     global errorcheck2
 # Wenn Daten die max 30 sex alt sind existieren, werden Diese aus Datenbank ausgelesen
+    global erwin
     try:
         mycursor = db.cursor()
         mycursor.execute("SELECT CPU FROM %s WHERE Timestamp >= DATE_SUB(NOW(), INTERVAL 0.5 MINUTE) ORDER BY Timestamp DESC LIMIT 1;"% (dbdev))
@@ -179,28 +181,35 @@ def dbloglive(dbdev):
 
 
 
-
-# Bar Plot wird mit neuesten Daten aus Datenbank erstellt
-    fig = plt.plot(figsize=(3,4),dpi=100)
+    
+# Livedaten werden Verabeitet und in einem Graphen dargestellt
+    fig = plt.Figure(figsize=(9,4),dpi=100)
     ax = fig.add_subplot()
-    #cur_Time = time.strftime("%H-%M-%S")
+    ax.set_ylim((0,100))
+    ax.set_title("LIVE-DATEN")
+    red_patch = mpatches.Patch(color='red', label='RAM')
+    blue_patch = mpatches.Patch(color='blue', label='CPU')
+    ax.legend(handles=[red_patch,blue_patch])
+    file = open("plot.csv")
+    reader = csv.reader(file)
+    lines= len(list(reader))
     with open ("plot.csv", "a", newline="") as f:
         writer = csv.writer(f)
-        writer.writerow(live_cpu)
-    with open("plot.csv", 'r') as f:
-        q = Deque(f, 10)
-        print(q)
-    plt.bar()
-    #ax.plot([1, 2, 3, 4], q, linestyle='-')
-
-        
+        writer.writerow([lines, live_cpu, live_ram])
+    try:
+        df = pd.read_csv("plot.csv")
+        IDout = df.ID
+        CPUout = df.CPU
+        RAMout = df.RAM
+        erwin = lines + 1
+        ax.grid()
+        ax.plot([IDout], [CPUout], 'b.')
+        ax.plot([IDout], [RAMout], 'r.')
+    except:
+        ax.bar("CPU",0)
+        ax.bar("RAM",0)
     canvas = FigureCanvasTkAgg(fig,tab1)
     canvas.get_tk_widget().grid(row=0, column=0)
-    
-
-
-
-
 
 
 
@@ -220,19 +229,19 @@ Label(root, text="Password").grid(row=1, column=2, padx=10, pady=10)
 
 e1 = Entry(root)
 e1.grid(row=0, column=1, padx=10, pady=10)
-e1.insert(END, 'marsserver.dynamic-dns.info')
+e1.insert(END, '')
 e2 = Entry(root)
 e2.grid(row=1, column=1, padx=10, pady=10)
-e2.insert(END, 'raspi')
+e2.insert(END, '')
 e3 = Entry(root)
 e3.grid(row=2, column=1, padx=10, pady=10)
-e3.insert(END, 'rpi1')
+e3.insert(END, '')
 e4 = Entry(root)
 e4.grid(row=0, column=3, padx=10, pady=10)
-e4.insert(END, 'mars')
+e4.insert(END, '')
 e5 = Entry(root, show="*")
 e5.grid(row=1, column=3, padx=10, pady=10)
-e5.insert(END, 'test')
+e5.insert(END, '')
 
 # Login, Beenden und Trennen Button werden erstellt und positioniert (lambda Funktion für Übergabe der Parameter)
 

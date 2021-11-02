@@ -19,12 +19,14 @@ from tkinter.constants import EW
 from typing import Text
 import mysql.connector
 from datetime import datetime
-from matplotlib.backends.backend_tkagg import (
-    FigureCanvasTkAgg, NavigationToolbar2Tk)
+from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
 from matplotlib.backend_bases import key_press_handler
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 import time
+import csv
+
+
 
 # pip install --trusted-host pypi.org --trusted-host files.pythonhosted.org --user matplotlib
 
