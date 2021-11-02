@@ -2,6 +2,7 @@ from datetime import datetime
 import tkinter  
 from tkinter import *
 from tkinter import ttk
+from typing import Deque
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
 from matplotlib.figure import Figure
@@ -10,7 +11,7 @@ from tkinter import messagebox
 import mysql.connector
 from mysql.connector.errors import Error
 import time
-
+import csv
 
 
 
@@ -22,11 +23,11 @@ errorcheck2 = 0
 
 def connect(dbhost, dbname, dbuser, dppass, dbdev):
     global db
-    #connect nur wenn DB nich manuell getrennt wurde --> nötig wegen automatischer Wiederholung der connect Funktion
+    # wenn Datenbank nicht manuell getennt wurde, connect --> automatische Wiederholung der connect Funktion
     try:
         print(db)
         if db != "getrennt":
-            # connect nur wenn Gerät angegeben
+            # wenn Gerät angegeben --> connect
             if dbdev != "":
                 db = mysql.connector.connect(
                 host = dbhost,                                                                         
@@ -36,37 +37,37 @@ def connect(dbhost, dbname, dbuser, dppass, dbdev):
                 )
 
                 if devcheck(dbdev) != True:
-                    no_dbdev = "Gerät " + dbdev + " existiert nicht!"
-                    messagebox.showerror("Gerät nicht in Datenbank gefunden!",message=no_dbdev)
+                    no_dbdev = "Gerät " + dbdev + " gibt es nicht!"
+                    messagebox.showerror("Gerät nicht in Datenbank enthalten!",message=no_dbdev)
                 else:
-                    # Connect button wird deaktiviert
+                    # Login button wird deaktiviert
                     loginbtn["state"] = "disabled"
                     dblog24(dbdev)
                     dbloglive(dbdev)
-                    # Wiederholung der connect Funktion nötig für neue Werte und refresh der Graphen
+                    # Erneute connect Funktion für Aktualisierung der Graphen und neue Werte
                     loginbtn.after(1000,lambda: connect(e1.get(),e2.get(),e4.get(),e5.get(),e3.get()))
             else:
-                dbdev_info = "Bitte ein Gerät angeben!"
-                messagebox.showinfo("Kein Gerät ausgewählt",message=dbdev_info)
+                dbdev_info = "Bitte geben Sie ein Gerät ein!"
+                messagebox.showinfo("Kein Gerät eingegeben",message=dbdev_info)
         
-        # db zurücksetzen auf Standardwert ermöglicht erneutes manuelles verbinden
+        # Datenbank wird zurückgesetzt auf Standardwerte für neues manuelles verbinden
         else:
             db = None
     
     except:
-        msg_err = "Verbindung zu " + dbname + " konnte nicht aufgebaut werden"
+        msg_err = "Es konnte keine Verbindung zu " + dbname + " hergestellt werden"
         messagebox.showerror("Keine Verbindung",message=msg_err)
 
 
-# kappt die Datenbankverbindung 
+# Trennen der Datenbankverbindung 
 def disconnect():
     global db
     if db != None and db != "getrennt":
-        dc = "Verbindung zur Datenbank getrennt!"
+        dc = "Datenbankverbindung getrennt!"
         messagebox.showinfo("Getrennt!",message=dc)
         db.close()
         db = "getrennt"
-        # Connect Button wird reaktiviert
+        # Login button wird wieder aktiviert
         loginbtn["state"] = "normal"
 
     
@@ -89,7 +90,6 @@ def dblog24(dbdev):
     mycursor = db.cursor()                                                                                    
 
 # MIN,MAX und AVG CPU und RAM Daten der letzten 24h werden aus DB ausgelesen und gespeichert
-# Kein try-except nötig, da kein Fehler. Es wird als Wert "None" gespeichert
     mycursor.execute("SELECT MIN(CPU) FROM %s WHERE Timestamp >= DATE_SUB(NOW(), INTERVAL 24 HOUR);"% (dbdev))
     min_cpu = mycursor.fetchone()[0]
     mycursor.execute("SELECT MIN(RAM) FROM %s WHERE Timestamp >= DATE_SUB(NOW(), INTERVAL 24 HOUR);"% (dbdev))
@@ -105,9 +105,8 @@ def dblog24(dbdev):
     mycursor.close() 
         
 
-# Bar Plots mit DB Daten werden erstellt für MAX,MIN und AVG CPU/RAM
-# try-except nötig, da plot mit Wert None nicht möglich
-# Eine Fehlermeldung reicht, daher bei fig2/3 except: pass um Fehlermeldung in Konsole zu umgehen
+# Bar Plots werden mit Daten aus Datenbank erstellt (MAX, MIN und AVG CPU/RAM)
+# Eine Fehlermeldung reicht, daher errorcheck nur bei fig1, pass um Fehlermeldung zu umgehen
     fig1 = plt.Figure(figsize=(3,4),dpi=100)
     ax1 = fig1.add_subplot()
     ax1.set_ylim((0,100))
@@ -118,12 +117,12 @@ def dblog24(dbdev):
     except:
         ax1.bar("MIN CPU",0)
         ax1.bar("MIN RAM",0)
-        # Wenn error bereits geworfen --> pass
+        # Falls error schon existiert --> pass
         if errorcheck1 > 0:
             pass
         else:
-            no_value = "Es stehen keine Daten der letzten 24h zur Verfügung!"
-            messagebox.showerror("Keine Werte",message=no_value)
+            no_value = "Es sind keine Daten der letzen 24h vorhanden!"
+            messagebox.showerror("Keine Daten",message=no_value)
             errorcheck1 = 1
     canvas1 = FigureCanvasTkAgg(fig1,tab2)
     canvas1.get_tk_widget().grid(row=0, column=0)
@@ -161,8 +160,7 @@ def dblog24(dbdev):
 # Live-Statistik
 def dbloglive(dbdev):                                                                                   
     global errorcheck2
-# Die neusten (max. 30 Sekunde alten) Daten werden aus der Datenbank ausgelesen, falls vorhanden
-# try-except hier nötig, da dieser SQL-Befehl Fehler wirft wenn keine Daten (da nichts übergeben wird)
+# Wenn Daten die max 30 sex alt sind existieren, werden Diese aus Datenbank ausgelesen
     try:
         mycursor = db.cursor()
         mycursor.execute("SELECT CPU FROM %s WHERE Timestamp >= DATE_SUB(NOW(), INTERVAL 0.5 MINUTE) ORDER BY Timestamp DESC LIMIT 1;"% (dbdev))
@@ -171,34 +169,50 @@ def dbloglive(dbdev):
         live_ram = mycursor.fetchone()[0]
         mycursor.close()
     except:
-        # Wenn error bereits geworfen --> pass
+        # Falls error schon existiert --> pass
         if errorcheck2 > 0:
             pass
         else:
-            no_value = "Für dieses Gerät sind keine Live-Daten verfügbar!"
+            no_value = "Keine Live-Daten verfügbar!"
             messagebox.showerror("NO VALUES",message=no_value)
             errorcheck2 = 1
 
-# Bar Plot mit neusten DB Daten wird erstellt
-# try-except, da beim Scheitern des letzten try-excepts live_cpu und live_ram keine Werte speichern
+
+
+
+# Bar Plot wird mit neuesten Daten aus Datenbank erstellt
     fig = plt.Figure(figsize=(3,4),dpi=100)
     ax = fig.add_subplot()
     ax.set_ylim((0,100))
-    ax.set_title("Live Data")
+    ax.set_title("Live Daten")
+    with open ("plot.csv", "a", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow([live_cpu,live_ram])
+    with open("plot.csv", 'r') as f:
+        q = Deque(f, 10)
+        print(q)
     try:
-        ax.bar("CPU",live_cpu)
-        ax.bar("RAM",live_ram)
+        ax.bar("MAX CPU",live_cpu)
+        ax.bar("MAX RAM",live_ram)
     except:
         ax.bar("CPU",0)
         ax.bar("RAM",0)
     canvas = FigureCanvasTkAgg(fig,tab1)
     canvas.get_tk_widget().grid(row=0, column=0)
+    
 
-# Hauptfenster wird erstellt
+
+
+
+
+
+
+
+# Fenster Wird erstellt
 root = tkinter.Tk()
 root.title("Hardware Monitoring")
 
-# Label und Eingabefelder werden erstellt, gesetzt und positioniert
+# Felder werden erstellt und positioniert 
 
 Label(root, text="Datenbankserver").grid(row=0, column=0, padx=10, pady=10)
 Label(root, text="Datenbankname").grid(row=1, column=0, padx=10, pady=10)
@@ -223,9 +237,7 @@ e5 = Entry(root, show="*")
 e5.grid(row=1, column=3, padx=10, pady=10)
 
 
-# Verbinden, Trennen und Beenden Button
-# Buttons werden erstellt, postitioniert und mit Funktionen bestückt
-# Umweg über lambda Funktion erlaubt Übergabe von Parameternf
+# Login, Beenden und Trennen Button werden erstellt und positioniert (lambda Funktion für Übergabe der Parameter)
 
 loginbtn = Button(root, text="Login",width=10,height=1, command= lambda: connect(e1.get(),e2.get(),e4.get(),e5.get(),e3.get()))
 closebtn = Button(root, text="Beenden",width=10,height=1, command=root.quit)
@@ -235,20 +247,20 @@ loginbtn.grid(row=0, column=4, padx=10, pady=10)
 closebtn.grid(row=2, column=4, padx=10, pady=10)
 discobtn.grid(row=1, column=4, padx=10, pady=10)
 
-# Live-Anzeige und 24h Statistik Ausgabe
+# Ausgabe Live- und 24h Anzeige
 notebook = ttk.Notebook(root)
 notebook.grid(row=6, columnspan=5)
 
-# Reiter des Notebooks
+# Benennung der Notebooks
 tab1 = Frame(notebook, width=700, height=300)
 tab2 = Frame(notebook, width=700, height=300)
 notebook.add(tab1, text="Live Anzeige")
 notebook.add(tab2, text="24h Statistik" )
 
-# Macht Fenster-Größe und Widget-Positionen flexibel
+# Fenstergröße nicht variabel
 root.resizable(height=0,width=0)
 
-# Endd-Funktion der GUI
+# GUI-Funktion
 root.mainloop()
 
 
