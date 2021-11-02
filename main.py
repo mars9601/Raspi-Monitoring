@@ -181,22 +181,19 @@ def dbloglive(dbdev):
 
 
 # Bar Plot wird mit neuesten Daten aus Datenbank erstellt
-    fig = plt.Figure(figsize=(3,4),dpi=100)
+    fig = plt.plot(figsize=(3,4),dpi=100)
     ax = fig.add_subplot()
-    ax.set_ylim((0,100))
-    ax.set_title("Live Daten")
+    #cur_Time = time.strftime("%H-%M-%S")
     with open ("plot.csv", "a", newline="") as f:
         writer = csv.writer(f)
-        writer.writerow([live_cpu,live_ram])
+        writer.writerow(live_cpu)
     with open("plot.csv", 'r') as f:
         q = Deque(f, 10)
         print(q)
-    try:
-        ax.bar("MAX CPU",live_cpu)
-        ax.bar("MAX RAM",live_ram)
-    except:
-        ax.bar("CPU",0)
-        ax.bar("RAM",0)
+    plt.bar()
+    #ax.plot([1, 2, 3, 4], q, linestyle='-')
+
+        
     canvas = FigureCanvasTkAgg(fig,tab1)
     canvas.get_tk_widget().grid(row=0, column=0)
     
@@ -223,19 +220,19 @@ Label(root, text="Password").grid(row=1, column=2, padx=10, pady=10)
 
 e1 = Entry(root)
 e1.grid(row=0, column=1, padx=10, pady=10)
-
+e1.insert(END, 'marsserver.dynamic-dns.info')
 e2 = Entry(root)
 e2.grid(row=1, column=1, padx=10, pady=10)
-
+e2.insert(END, 'raspi')
 e3 = Entry(root)
 e3.grid(row=2, column=1, padx=10, pady=10)
-
+e3.insert(END, 'rpi1')
 e4 = Entry(root)
 e4.grid(row=0, column=3, padx=10, pady=10)
-
+e4.insert(END, 'mars')
 e5 = Entry(root, show="*")
 e5.grid(row=1, column=3, padx=10, pady=10)
-
+e5.insert(END, 'test')
 
 # Login, Beenden und Trennen Button werden erstellt und positioniert (lambda Funktion für Übergabe der Parameter)
 
