@@ -1,3 +1,15 @@
+""" 
+Raspberry Pi Monitoring
+Klasse: BS-FISI-01
+Fach: BS-FISI-01_LF8
+Autoren: Andre Liebig, Sven Kaulen, Lars Bergstein ,Marc Shlo-macher
+
+Erstellt am: 23.09.2021
+Zuletzt geändert am: 02.11.2021
+ """
+
+
+
 import tkinter  
 from tkinter import *
 from tkinter import ttk
@@ -11,19 +23,19 @@ import pandas as pd
 from numpy import empty
 import matplotlib.patches as mpatches
 
-
+#Basiswerte setzen
 db= None
 errorcheck1 = 0
 errorcheck2 = 0
-import csv
-erwin = 0
+
+#Erstellen einer Temporären CSV Datei
 with open('plot.csv', 'w', newline='') as outcsv:
     writer = csv.writer(outcsv)
     writer.writerow(["ID", "CPU", "RAM"])
 
 
 
-
+#Datenbank Verbindung
 def connect(dbhost, dbname, dbuser, dppass, dbdev):
     global db
     # wenn Datenbank nicht manuell getennt wurde, connect --> automatische Wiederholung der connect Funktion
@@ -75,7 +87,7 @@ def disconnect():
 
     
 
-
+#Geräte Eingabe Prüfen
 def devcheck(table):
     global db
     mycursor = db.cursor()
@@ -162,7 +174,6 @@ def dblog24(dbdev):
 def dbloglive(dbdev):                                                                                   
     global errorcheck2
 # Wenn Daten die max 30 sex alt sind existieren, werden Diese aus Datenbank ausgelesen
-    global erwin
     try:
         mycursor = db.cursor()
         mycursor.execute("SELECT CPU FROM %s WHERE Timestamp >= DATE_SUB(NOW(), INTERVAL 0.5 MINUTE) ORDER BY Timestamp DESC LIMIT 1;"% (dbdev))
@@ -201,7 +212,6 @@ def dbloglive(dbdev):
         IDout = df.ID
         CPUout = df.CPU
         RAMout = df.RAM
-        erwin = lines + 1
         ax.grid()
         ax.plot([IDout], [CPUout], 'b.')
         ax.plot([IDout], [RAMout], 'r.')
